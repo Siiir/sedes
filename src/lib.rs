@@ -1,12 +1,14 @@
+pub use {
+    fmts::SerializationFormat,
+    se::{
+        magical::MagicalSerializer, make_serializer, serialize_magically
+    },
+};
+pub mod se;
+pub mod fmts;
+
+// Private modules.
 mod util {
     pub trait Something {}
     impl<T> Something for T {}
 }
-pub use sede::{
-    fmts::SerializationFormat,
-    se::{
-        serialize_magically, magical::MagicalSerializer,
-        make_serializer,
-    },
-};
-pub mod sede;

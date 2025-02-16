@@ -118,25 +118,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "exper"
-version = "0.1.0"
-dependencies = [
- "bimap",
- "bincode",
- "cfg-if",
- "color-eyre",
- "erased-serde",
- "rmp-serde",
- "serde",
- "serde-pickle",
- "serde_cbor",
- "serde_json",
- "serde_yaml",
- "strum",
- "toml",
-]
-
-[[package]]
 name = "eyre"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -343,6 +324,25 @@ name = "ryu"
 version = "1.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ea1a2d0a644769cc99faa24c3ad26b379b786fe7c36fd3c546254801650e6dd"
+
+[[package]]
+name = "sedes"
+version = "0.1.0"
+dependencies = [
+ "bimap",
+ "bincode",
+ "cfg-if",
+ "color-eyre",
+ "erased-serde",
+ "rmp-serde",
+ "serde",
+ "serde-pickle",
+ "serde_cbor",
+ "serde_json",
+ "serde_yaml",
+ "strum",
+ "toml",
+]
 
 [[package]]
 name = "serde"

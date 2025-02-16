@@ -14,12 +14,26 @@ pub fn make_serializer<
 }
 
 /// Dynamically serialize any `serde::Serialize` object.
-/// # Example
+/// # Examples
+/// 
 /// ```rust
-/// let mut writer = Vec::<u8>::new();
-/// serialize_magically(&mut writer, "YAML", &42).unwrap();
-/// let output = core::str::from_utf8(writer.as_slice()).unwrap();
-/// assert_eq!(output, "42");
+/// #[cfg(features="yaml")]
+/// {
+///     let mut writer = Vec::<u8>::new();
+///     sedes::serialize_magically(&mut writer, "YAML", &42).unwrap();
+///     let output = core::str::from_utf8(writer.as_slice()).unwrap();
+///     assert_eq!(output, "42\n");
+/// }
+/// ```
+///    
+/// ```rust
+/// #[cfg(features="json")]
+/// {
+///     let mut writer = Vec::<u8>::new();
+///     sedes::serialize_magically(&mut writer, "JSON", &None::<f64>).unwrap();
+///     let output = core::str::from_utf8(writer.as_slice()).unwrap();
+///     assert_eq!(output, "null");
+/// }
 /// ```
 pub fn serialize_magically<'w, 'o, W, F, O>(
     writer: W,
