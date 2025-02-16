@@ -28,7 +28,9 @@ static FILE_EXTENSIONS: LazyLock<
     strum::EnumString,
     strum::VariantArray,
     strum::EnumProperty,
+    strum::EnumIs,
     strum::IntoStaticStr,
+    strum::Display,
     Debug,
     PartialEq,
     Eq,
@@ -160,6 +162,11 @@ impl SerializationFormat {
         FILE_EXTENSIONS
             .get_by_left(&self)
             .expect("every format should have a file extension")
+    }
+}
+impl From<&Self> for SerializationFormat{
+    fn from(value: &Self) -> Self {
+        *value
     }
 }
 
