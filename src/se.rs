@@ -46,9 +46,9 @@ where
     color_eyre::Report: From<F::Error>,
     O: serde::Serialize + ?Sized + 'o,
 {
-    let mut dynamic_serializer: crate::MagicalSerializer<'w> =
+    let mut serializer: crate::MagicalSerializer<'w> =
         make_serializer(writer, format)?;
-    dynamic_serializer.serialize(serializable)?;
+    serializer.serialize(serializable)?;
     Ok(())
 }
 

@@ -1,4 +1,7 @@
-use std::{io::Write, sync::LazyLock};
+use std::{
+    io::{Read, Write},
+    sync::LazyLock,
+};
 
 use bimap::BiHashMap;
 use strum::{EnumProperty, VariantArray};
@@ -96,6 +99,54 @@ impl SerializationFormat {
             Self::Pickle => wrap!(
                 serde_pickle::Serializer::<W>,
                 serde_pickle::SerOptions::default()
+            ),
+        }
+    }
+    pub fn deserializer<'r, R: Read + 'r>(
+        self,
+        reader: R,
+    ) -> crate::MagicalDeserializer<'r> {
+        match self {
+            #[cfg(feature = "json")]
+            Self::Json => {
+                crate::MagicalDeserializer::new(
+                    serde_json::Deserializer::from_reader(reader),
+                )
+            }
+
+            #[cfg(feature = "yaml")]
+            Self::Yaml => {
+                crate::MagicalDeserializer::from_direct_impl(
+                    serde_yaml::Deserializer::from_reader(reader),
+                )
+            }
+
+            #[cfg(feature = "cbor")]
+            Self::Cbor => crate::MagicalDeserializer::new(
+                serde_cbor::Deserializer::new(
+                    serde_cbor::de::IoRead::new(reader),
+                ),
+            ),
+
+            #[cfg(feature = "rmp")]
+            Self::Rmp => crate::MagicalDeserializer::new(
+                rmp_serde::Deserializer::new(reader),
+            ),
+
+            #[cfg(feature = "bincode")]
+            Self::Bincode => crate::MagicalDeserializer::new(
+                bincode::Deserializer::with_reader(
+                    reader,
+                    bincode::DefaultOptions::new(),
+                ),
+            ),
+
+            #[cfg(feature = "pickle")]
+            Self::Pickle => crate::MagicalDeserializer::new(
+                serde_pickle::Deserializer::new(
+                    reader,
+                    serde_pickle::DeOptions::default(),
+                ),
             ),
         }
     }

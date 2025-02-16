@@ -9,10 +9,23 @@ pub struct MagicalSerializer<'w> {
         ManuallyDrop<Pin<Box<dyn erased_serde::Serializer + 'w>>>,
 }
 impl<'w> MagicalSerializer<'w> {
+    pub fn from_direct_impl<T>(typed_serializer: T) -> Self
+    where
+        T: serde::Serializer + 'w,
+    {
+        Self {
+            boxed_dependency: Box::leak(Box::new(())),
+            erased_dependant: ManuallyDrop::new(Box::pin(
+                <dyn erased_serde::Serializer>::erase(
+                    typed_serializer,
+                ),
+            )),
+        }
+    }
     pub fn new<T>(typed_serializer: T) -> Self
     where
         T: 'w,
-        for<'any> &'any mut T: serde::Serializer,
+        &'w mut T: serde::Serializer,
     {
         let boxed_dependency: *mut T =
             Box::leak(Box::new(typed_serializer));
@@ -42,7 +55,7 @@ impl<'w> Drop for MagicalSerializer<'w> {
     fn drop(&mut self) {
         unsafe {
             drop(ManuallyDrop::take(&mut self.erased_dependant));
-            std::ptr::drop_in_place(self.boxed_dependency);
+            drop(Box::from_raw(self.boxed_dependency));
         }
     }
 }
