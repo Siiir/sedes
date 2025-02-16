@@ -1,6 +1,8 @@
 [package]
 name = "sedes"
 description = "SErialization & DEserialization Simplified"
+repository = "https://github.com/Siiir/sedes"
+license = "MIT"
 version = "0.1.0"
 edition = "2021"
 
@@ -20,7 +22,7 @@ strum = { version = "0.27.0", features = ["derive"] }
 cfg-if = "1.0.0"
 
 [features]
-default = ["json", "yaml"]
+default = ["all"]
 all = ["json", "yaml", "toml", "cbor", "rmp", "bincode", "pickle"]
 json = ["dep:serde_json"]
 yaml = ["dep:serde_yaml"]
