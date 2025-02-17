@@ -14,10 +14,7 @@ pub mod fmts;
 pub mod se;
 
 // Private modules.
-mod util {
-    pub trait Something {}
-    impl<T> Something for T {}
-}
+mod util;
 
 #[cfg(test)]
 pub mod test {
@@ -31,7 +28,7 @@ pub mod test {
     fn sede_bijectivity() -> color_eyre::Result<()> {
         for fmt in crate::SerializationFormat::VARIANTS
             .into_iter()
-            .filter(|fmt| !fmt.is_pickle())
+            // .filter(|fmt| !fmt.is_pickle())
         {
             for _ in 0..5 {
                 test_bijectivity_for(fmt)
@@ -47,11 +44,7 @@ pub mod test {
         let mut rng = rand::rng();
         let mut sink = Vec::<u8>::new();
 
-        let serializable: Serializable = (
-            Rng::random(&mut rng),
-            Rng::random(&mut rng),
-            Rng::random(&mut rng),
-        );
+        let serializable: Serializable = Rng::random(&mut rng);
 
         sink.clear();
         crate::serialize_magically(&mut sink, fmt, &serializable)?;
@@ -62,13 +55,9 @@ pub mod test {
         Ok(())
     }
     #[test]
-    fn pickle() -> Result<(), Box<dyn std::error::Error>> {
+    fn pickle() -> color_eyre::Result<()> {
         let mut rng = rand::rng();
-        let serializable: Serializable = (
-            Rng::random(&mut rng),
-            Rng::random(&mut rng),
-            Rng::random(&mut rng),
-        );
+        let serializable: Serializable = Rng::random(&mut rng);
 
         // Manually serialize
         let pickle_bytes = serde_pickle::to_vec(

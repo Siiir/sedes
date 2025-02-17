@@ -98,10 +98,21 @@ impl SerializationFormat {
             ),
 
             #[cfg(feature = "pickle")]
-            Self::Pickle => wrap!(
-                serde_pickle::Serializer::<W>,
-                serde_pickle::SerOptions::default()
-            ),
+            Self::Pickle => {
+                let protocol_header = &[128, 3];
+                let writer = crate::util::RcRfWriter::from(writer);
+
+                let m = crate::MagicalSerializer::new(
+                    serde_pickle::Serializer::new(
+                        writer.clone(),
+                        serde_pickle::SerOptions::default(),
+                    ),
+                );
+                let mut m = unsafe { m.with_seized_writer(writer.with_dyn_write()) };
+
+                m.set_prefix_for_writes(protocol_header);
+                m
+            }
         }
     }
     pub fn deserializer<'r, R: Read + 'r>(
@@ -110,11 +121,9 @@ impl SerializationFormat {
     ) -> crate::MagicalDeserializer<'r> {
         match self {
             #[cfg(feature = "json")]
-            Self::Json => {
-                crate::MagicalDeserializer::new(
-                    serde_json::Deserializer::from_reader(reader),
-                )
-            }
+            Self::Json => crate::MagicalDeserializer::new(
+                serde_json::Deserializer::from_reader(reader),
+            ),
 
             #[cfg(feature = "yaml")]
             Self::Yaml => {
@@ -164,7 +173,7 @@ impl SerializationFormat {
             .expect("every format should have a file extension")
     }
 }
-impl From<&Self> for SerializationFormat{
+impl From<&Self> for SerializationFormat {
     fn from(value: &Self) -> Self {
         *value
     }
@@ -178,6 +187,43 @@ mod test {
         #[test]
         fn lazy_loads_correctly() {
             LazyLock::force(&super::super::FILE_EXTENSIONS);
+        }
+    }
+    mod pickle {
+        use rand::Rng;
+
+        type Serializable = (i64, f32, bool);
+
+        #[test]
+        fn pickle() -> color_eyre::Result<()> {
+            let mut rng = rand::rng();
+            let serializable: Serializable = Rng::random(&mut rng);
+
+            let static_pickle_bytes = serde_pickle::to_vec(
+                &serializable,
+                serde_pickle::SerOptions::new(),
+            )
+            .unwrap();
+            assert_eq!(
+                crate::deserialize_magically::<_, _, Serializable>(
+                    static_pickle_bytes.as_slice(),
+                    "Pickle"
+                )
+                .unwrap(),
+                serializable
+            );
+
+            let mut dynamic_pickle_bytes = Vec::<u8>::new();
+            crate::serialize_magically(
+                &mut dynamic_pickle_bytes,
+                "Pickle",
+                &serializable,
+            )
+            .unwrap();
+
+            assert_eq!(dynamic_pickle_bytes, static_pickle_bytes);
+
+            Ok(())
         }
     }
 }
