@@ -100,6 +100,7 @@ impl SerializationFormat {
             #[cfg(feature = "pickle")]
             Self::Pickle => {
                 let protocol_header = &[128, 3];
+                let stop_opcode = b".";
                 let writer = crate::util::RcRfWriter::from(writer);
 
                 let m = crate::MagicalSerializer::new(
@@ -111,6 +112,7 @@ impl SerializationFormat {
                 let mut m = unsafe { m.with_seized_writer(writer.with_dyn_write()) };
 
                 m.set_prefix_for_writes(protocol_header);
+                m.set_sufix_for_writes(stop_opcode);
                 m
             }
         }
@@ -189,13 +191,14 @@ mod test {
             LazyLock::force(&super::super::FILE_EXTENSIONS);
         }
     }
+    #[cfg(feature="pickle")]
     mod pickle {
         use rand::Rng;
 
         type Serializable = (i64, f32, bool);
 
         #[test]
-        fn pickle() -> color_eyre::Result<()> {
+        fn magic_sede_should_work_like_static() -> color_eyre::Result<()> {
             let mut rng = rand::rng();
             let serializable: Serializable = Rng::random(&mut rng);
 

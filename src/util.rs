@@ -1,6 +1,7 @@
 pub trait Something {}
 impl<T> Something for T {}
 
+#[allow(unused_imports)]
 pub use rc_rf::{RcRfDynWriter, RcRfWriter};
 pub mod rc_rf {
     use std::{cell::RefCell, io::Write, rc::Rc};

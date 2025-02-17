@@ -7,6 +7,7 @@ type SeizedWriterHandle<'w> = crate::util::RcRfDynWriter<'w>;
 
 pub struct MagicalSerializer<'w> {
     prefix_for_writes: &'static [u8],
+    sufix_for_writes: &'static [u8],
     writer: OnceCell<SeizedWriterHandle<'w>>,
     /// Don't R/W from this address untill dropping the "dependant",
     /// which uniquely borrows the addressed value.
@@ -23,6 +24,7 @@ impl<'w> MagicalSerializer<'w> {
     {
         Self {
             prefix_for_writes: b"",
+            sufix_for_writes: b"",
             writer: OnceCell::new(),
             boxed_dependency: Box::leak(Box::new(())),
             erased_dependant: unsafe {
@@ -43,6 +45,7 @@ impl<'w> MagicalSerializer<'w> {
             Box::leak(Box::new(typed_serializer));
         Self {
             prefix_for_writes: b"",
+            sufix_for_writes: b"",
             writer: OnceCell::new(),
             boxed_dependency,
             erased_dependant: unsafe {
@@ -58,9 +61,15 @@ impl<'w> MagicalSerializer<'w> {
     pub fn prefix_for_writes(&self) -> &'static [u8] {
         self.prefix_for_writes
     }
+    pub fn sufix_for_writes(&self) -> &'static [u8] {
+        self.sufix_for_writes
+    }
     // CRUD-U: Update settings
     pub fn set_prefix_for_writes(&mut self, bytes: &'static [u8]) {
         self.prefix_for_writes = bytes;
+    }
+    pub fn set_sufix_for_writes(&mut self, bytes: &'static [u8]) {
+        self.sufix_for_writes = bytes;
     }
 
     // CRUD-U: Write instructions
@@ -70,6 +79,7 @@ impl<'w> MagicalSerializer<'w> {
     ) -> color_eyre::Result<()> {
         self.write_prefix()?;
         self.serialize_austerely(serializable)?;
+        self.write_sufix()?;
         Ok(())
     }
     fn write_prefix(&mut self) -> std::io::Result<usize> {
@@ -77,6 +87,16 @@ impl<'w> MagicalSerializer<'w> {
         if let Some(writer) = self.writer.get_mut() {
             writer.borrow_mut().write(prefix)
         } else if prefix.is_empty() {
+            Ok(0)
+        } else {
+            panic!()
+        }
+    }
+    fn write_sufix(&mut self) -> std::io::Result<usize> {
+        let sufix = self.sufix_for_writes();
+        if let Some(writer) = self.writer.get_mut() {
+            writer.borrow_mut().write(sufix)
+        } else if sufix.is_empty() {
             Ok(0)
         } else {
             panic!()
