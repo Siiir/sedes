@@ -124,7 +124,7 @@ impl<'w> MagicalSerializer<'w> {
         seized_writer: SeizedWriterHandle<'seized_w>,
     ) -> MagicalSerializer<'seized_w> {
         let prolonged_self: MagicalSerializer<'seized_w> =
-            std::mem::transmute(self);
+            unsafe { std::mem::transmute(self) };
 
         prolonged_self.writer.set(seized_writer).unwrap_or_else(|_| panic!("There must be only one real writer under the hood of serializer(s)."));
 

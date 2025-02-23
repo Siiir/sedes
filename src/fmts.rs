@@ -23,22 +23,31 @@ static FILE_EXTENSIONS: LazyLock<
 });
 
 #[derive(
+    // CRUD-C:
     Clone,
     Copy,
     strum::EnumString,
+    // CRUD-R: Type properties
     strum::VariantArray,
+    strum::VariantNames,
+    // CRUD-R: Instance properties
     strum::EnumProperty,
     strum::EnumIs,
     strum::IntoStaticStr,
+    // CRUD-R: Displayers
     strum::Display,
     Debug,
+    // CRUD-R: Equivalence
     PartialEq,
     Eq,
     Hash,
 )]
+#[cfg(feature = "json")]
+#[derive(Default)]
 pub enum SerializationFormat {
     #[cfg(feature = "json")]
     #[strum(serialize = "JSON", props(file_ext = "json"))]
+    #[default]
     Json,
 
     #[cfg(feature = "yaml")]
