@@ -1,3 +1,4 @@
+use std::{io::Write, io::Read};
 pub use {
     de::{
         deserialize_magically, magical::MagicalDeserializer,
@@ -9,12 +10,26 @@ pub use {
         serialize_magically,
     },
 };
+
 pub mod de;
 pub mod fmts;
 pub mod se;
-
-// Private modules.
 mod util;
+
+pub fn translate_magically<'r, 'w, T, R, W, I, O>(reader: R, input_fmt: I, writer: W, output_fmt: O) -> color_eyre::Result<()>
+where
+    T: serde::de::DeserializeOwned + serde::Serialize + ?Sized,
+    R: Read + 'r,
+    W: Write + 'w,
+    I: TryInto<crate::SerializationFormat>,
+    color_eyre::Report: From<I::Error>,
+    O: TryInto<crate::SerializationFormat>,
+    color_eyre::Report: From<O::Error>,
+{
+    let value: T = deserialize_magically(reader, input_fmt)?;
+    serialize_magically(writer, output_fmt, &value)?;
+    Ok(())
+}
 
 #[cfg(test)]
 pub mod test {
@@ -26,8 +41,7 @@ pub mod test {
 
     #[test]
     fn sede_bijectivity() -> color_eyre::Result<()> {
-        for fmt in crate::SerializationFormat::VARIANTS
-        {
+        for fmt in crate::SerializationFormat::VARIANTS {
             for _ in 0..5 {
                 test_bijectivity_for(fmt)
                     .with_context(|| format!("failed for {fmt}"))?;
