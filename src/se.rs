@@ -15,7 +15,7 @@ pub fn make_serializer<
 
 /// Dynamically serialize any `serde::Serialize` object.
 /// # Examples
-/// 
+///
 /// ```rust
 /// #[cfg(features="yaml")]
 /// {
@@ -52,6 +52,8 @@ where
     Ok(())
 }
 
+pub mod fmt;
+
 #[cfg(test)]
 mod test {
     mod dyn_serialize_static {
@@ -62,14 +64,16 @@ mod test {
         fn succeeds_with_existing_fmt() -> color_eyre::Result<()> {
             serialize_magically(
                 std::io::sink(),
-                crate::SerializationFormat::VARIANTS[0],
+                crate::DeserializationFormat::VARIANTS[0],
                 &(),
             )
         }
         #[test]
         fn fails_with_non_existing_fmt() {
-            assert!(serialize_magically(std::io::sink(), "Json", &())
-                .is_err())
+            assert!(
+                serialize_magically(std::io::sink(), "Json", &())
+                    .is_err()
+            )
         }
         #[cfg(feature = "json")]
         #[test]

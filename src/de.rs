@@ -5,7 +5,7 @@ pub mod magical;
 pub fn make_deserializer<
     'r,
     R: Read + 'r,
-    F: TryInto<crate::SerializationFormat>,
+    F: TryInto<crate::DeserializationFormat>,
 >(
     reader: R,
     format: F,
@@ -19,7 +19,7 @@ pub fn deserialize_magically<'r, R, F, O>(
 ) -> color_eyre::Result<O>
 where
     R: Read + 'r,
-    F: TryInto<crate::SerializationFormat>,
+    F: TryInto<crate::DeserializationFormat>,
     color_eyre::Report: From<F::Error>,
     O: serde::de::DeserializeOwned,
 {
@@ -27,3 +27,5 @@ where
         make_deserializer(reader, format)?;
     Ok(deserializer.deserialize()?)
 }
+
+pub mod fmt;
