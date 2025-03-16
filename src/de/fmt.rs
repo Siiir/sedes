@@ -4,6 +4,7 @@ use std::{
 };
 
 use bimap::BiHashMap;
+use serde::{Deserialize, Serialize};
 use strum::{EnumProperty, VariantArray};
 
 use crate::SerializationFormat;
@@ -26,6 +27,7 @@ static FILE_EXTENSIONS: LazyLock<
 
 #[derive(
     // CRUD-C:
+    Deserialize,
     Clone,
     Copy,
     strum::EnumString,
@@ -43,6 +45,8 @@ static FILE_EXTENSIONS: LazyLock<
     PartialEq,
     Eq,
     Hash,
+    // CRUD-R: Misc
+    Serialize,
 )]
 #[cfg(feature = "json")]
 #[derive(Default)]

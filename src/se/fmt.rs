@@ -1,9 +1,12 @@
 use std::io::{Read, Write};
 
+use serde::{Deserialize, Serialize};
+
 use crate::DeserializationFormat;
 
 #[derive(
     // CRUD-C: Constructors
+    Deserialize,
     Clone,
     Copy,
     strum::EnumString,
@@ -19,6 +22,8 @@ use crate::DeserializationFormat;
     PartialEq,
     Eq,
     Hash,
+    // CRUD-R: Misc
+    Serialize,
 )]
 #[cfg(feature = "json")]
 #[derive(Default)]
