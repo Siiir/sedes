@@ -12,6 +12,8 @@ pub use {
 
 pub mod de;
 pub mod se;
+pub use sede::fmt::SedeFormat;
+pub mod sede;
 mod util;
 
 pub fn translate_magically<'r, 'w, T, R, W, I, O>(

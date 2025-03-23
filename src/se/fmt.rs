@@ -127,16 +127,6 @@ impl SerializationFormat {
         DeserializationFormat::from(self).deserializer(reader)
     }
 }
-impl SerializationFormat {
-    pub fn from_file_ext(file_extension: &str) -> Option<Self> {
-        DeserializationFormat::from_file_ext(file_extension).map(Into::into)        
-    }
-
-    pub fn file_ext(self) -> &'static str {
-        DeserializationFormat::file_ext(self.into())
-    }
-}
-
 
 // CRUD-C:
 
@@ -182,3 +172,5 @@ impl strum::EnumProperty for SerializationFormat {
     }
 }
 
+#[cfg(test)]
+mod test;

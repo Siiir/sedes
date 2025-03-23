@@ -1,29 +1,8 @@
-use std::{
-    io::{Read, Write},
-    sync::LazyLock,
-};
+use std::io::{Read, Write};
 
-use bimap::BiHashMap;
 use serde::{Deserialize, Serialize};
-use strum::{EnumProperty, VariantArray};
 
 use crate::SerializationFormat;
-
-static FILE_EXTENSIONS: LazyLock<
-    BiHashMap<DeserializationFormat, &str>,
-> = LazyLock::new(|| {
-    DeserializationFormat::VARIANTS
-        .iter()
-        .map(|&variant| {
-            (
-            variant,
-            variant.get_str("file_ext").expect(
-                "every variant should have \"file_ext\" property",
-            ),
-        )
-        })
-        .collect()
-});
 
 #[derive(
     // CRUD-C:
@@ -57,7 +36,10 @@ pub enum DeserializationFormat {
     Json,
 
     #[cfg(feature = "yaml")]
-    #[strum(serialize = "YAML", props(file_ext = "yml"))]
+    #[strum(
+        serialize = "YAML",
+        props(file_ext = "yml", alt_file_exts = "yaml")
+    )]
     Yaml,
 
     #[cfg(feature = "cbor")]
@@ -132,17 +114,6 @@ impl DeserializationFormat {
         }
     }
 }
-impl DeserializationFormat {
-    pub fn from_file_ext(file_extension: &str) -> Option<Self> {
-        FILE_EXTENSIONS.get_by_right(file_extension).copied()
-    }
-
-    pub fn file_ext(self) -> &'static str {
-        FILE_EXTENSIONS
-            .get_by_left(&self)
-            .expect("every format should have a file extension")
-    }
-}
 
 // CRUD-C:
 
@@ -174,53 +145,4 @@ impl From<&Self> for DeserializationFormat {
 }
 
 #[cfg(test)]
-mod test {
-    mod file_extensions {
-        use std::sync::LazyLock;
-
-        #[test]
-        fn lazy_loads_correctly() {
-            LazyLock::force(&super::super::FILE_EXTENSIONS);
-        }
-    }
-    #[cfg(feature = "pickle")]
-    mod pickle {
-        use rand::Rng;
-
-        type Serializable = (i64, f32, bool);
-
-        #[test]
-        fn magic_sede_should_work_like_static()
-        -> color_eyre::Result<()> {
-            let mut rng = rand::rng();
-            let serializable: Serializable =
-                Rng::random(&mut rng);
-
-            let static_pickle_bytes = serde_pickle::to_vec(
-                &serializable,
-                serde_pickle::SerOptions::new(),
-            )
-            .unwrap();
-            assert_eq!(
-            crate::deserialize_magically::<_, _, Serializable>(
-                static_pickle_bytes.as_slice(),
-                "Pickle"
-            )
-            .unwrap(),
-            serializable
-        );
-
-            let mut dynamic_pickle_bytes = Vec::<u8>::new();
-            crate::serialize_magically(
-                &mut dynamic_pickle_bytes,
-                "Pickle",
-                &serializable,
-            )
-            .unwrap();
-
-            assert_eq!(dynamic_pickle_bytes, static_pickle_bytes);
-
-            Ok(())
-        }
-    }
-}
+mod test;
