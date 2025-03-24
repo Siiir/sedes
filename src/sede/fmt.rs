@@ -1,3 +1,5 @@
+use std::ffi::OsStr;
+
 use crate::DeserializationFormat;
 
 use ext_maps::{FAVOURED_FILE_EXTS, FROM_FILE_EXT};
@@ -7,6 +9,10 @@ mod ext_maps;
 // Built first
 
 pub trait SedeFormat {
+    fn from_file_ext_os(file_extension: &OsStr) -> Option<Self>
+    where
+        Self: Sized;
+
     fn from_file_ext(file_extension: &str) -> Option<Self>
     where
         Self: Sized;
@@ -27,6 +33,10 @@ where
         + for<'a> From<&'a DeserializationFormat>,
     DeserializationFormat: From<D> + for<'a> From<&'a D>,
 {
+    fn from_file_ext_os(file_extension: &OsStr) -> Option<Self> {
+        let file_extension: &str = file_extension.to_str()?;
+        Self::from_file_ext(file_extension)
+    }
     fn from_file_ext(file_extension: &str) -> Option<Self> {
         let des_fmt = FROM_FILE_EXT.get(file_extension).copied()?;
         Some(des_fmt.into())
@@ -67,7 +77,10 @@ mod test {
         #[test]
         fn lists_yml_and_yaml_file_exts() {
             let yaml_file_exts: HashSet<&str> =
-                DeserializationFormat::Yaml.file_exts().into_iter().collect();
+                DeserializationFormat::Yaml
+                    .file_exts()
+                    .into_iter()
+                    .collect();
 
             let wanted_file_exts: HashSet<&str> =
                 ["yml", "yaml"].into();

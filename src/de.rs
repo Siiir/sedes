@@ -1,5 +1,7 @@
 use std::io::Read;
 
+pub mod fmt;
+pub mod fs;
 pub mod magical;
 
 pub fn make_deserializer<
@@ -27,5 +29,3 @@ where
         make_deserializer(reader, format)?;
     Ok(deserializer.deserialize()?)
 }
-
-pub mod fmt;

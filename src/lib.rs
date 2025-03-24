@@ -3,10 +3,12 @@ pub use {
     de::{
         deserialize_magically, fmt::DeserializationFormat,
         magical::MagicalDeserializer, make_deserializer,
+        fs::deserialize_from_file,
     },
     se::{
         fmt::SerializationFormat, magical::MagicalSerializer,
         make_serializer, serialize_magically,
+        fs::serialize_to_file,
     },
 };
 
