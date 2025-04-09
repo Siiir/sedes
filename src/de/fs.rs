@@ -6,7 +6,9 @@ use serde::de::DeserializeOwned;
 use color_eyre::{eyre::{eyre, Context}, Result};
 use crate::{DeserializationFormat, SedeFormat};
 
-/// Deserializes an object from a file, deducting the format from the file extension.
+/// Deserializes an object from a file, deducing the (de)serialization format from the file extension.
+///
+/// E.g. for some_file.json, the format is deducted to be "JSON", for a file matching pattern /*.\.ya?ml/ it will be deducted as "YAML", etc.
 ///
 /// # Examples
 ///
