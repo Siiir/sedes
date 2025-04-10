@@ -7,34 +7,36 @@ use crate::DeserializationFormat;
 
 use super::SedeFormat as _;
 
-pub static FAVOURED_FILE_EXTS: LazyLock<
-    BiHashMap<DeserializationFormat, &'static str>,
-> = LazyLock::new(|| {
-    DeserializationFormat::VARIANTS
-        .iter()
-        .map(|&variant| {
-            (variant, variant.get_str("file_ext").expect(
-    "every variant should have \"file_ext\" property",
-))
-        })
-        .collect()
-});
+pub static FAVOURED_FILE_EXTS: LazyLock<BiHashMap<DeserializationFormat, &'static str>> =
+    LazyLock::new(|| {
+        DeserializationFormat::VARIANTS
+            .iter()
+            .map(|&variant| {
+                (
+                    variant,
+                    variant
+                        .get_str("file_ext")
+                        .expect("every variant should have \"file_ext\" property"),
+                )
+            })
+            .collect()
+    });
 
 // Built second
 
-pub static FROM_FILE_EXT: LazyLock<
-    HashMap<&'static str, DeserializationFormat>,
-> = LazyLock::new(|| {
-    let mut out = HashMap::new();
+pub static FROM_FILE_EXT: LazyLock<HashMap<&'static str, DeserializationFormat>> =
+    LazyLock::new(|| {
+        let mut out = HashMap::new();
 
-    for &variant in DeserializationFormat::VARIANTS {
-        variant.file_exts().into_iter().for_each(|ext| {
-            assert!(out.insert(ext, variant).is_none())
-        });
-    }
+        for &variant in DeserializationFormat::VARIANTS {
+            variant
+                .file_exts()
+                .into_iter()
+                .for_each(|ext| assert!(out.insert(ext, variant).is_none()));
+        }
 
-    out
-});
+        out
+    });
 
 #[cfg(test)]
 mod test {

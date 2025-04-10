@@ -59,10 +59,7 @@ pub enum SerializationFormat {
 }
 
 impl SerializationFormat {
-    pub fn serializer<'w, W: Write + 'w>(
-        self,
-        writer: W,
-    ) -> crate::MagicalSerializer<'w> {
+    pub fn serializer<'w, W: Write + 'w>(self, writer: W) -> crate::MagicalSerializer<'w> {
         #[allow(unused_macros)]
         macro_rules! wrap {
         ($serializer:ty $(, $arg:expr)*) => {
@@ -72,9 +69,9 @@ impl SerializationFormat {
 
         match self {
             #[cfg(feature = "json")]
-            Self::PrettyJson => crate::MagicalSerializer::new(
-                serde_json::Serializer::pretty(writer),
-            ),
+            Self::PrettyJson => {
+                crate::MagicalSerializer::new(serde_json::Serializer::pretty(writer))
+            }
             #[cfg(feature = "json")]
             Self::Json => wrap!(serde_json::Serializer::<W>),
 
@@ -82,20 +79,15 @@ impl SerializationFormat {
             Self::Yaml => wrap!(serde_yaml::Serializer::<W>),
 
             #[cfg(feature = "cbor")]
-            Self::Cbor => crate::MagicalSerializer::new(
-                serde_cbor::Serializer::new(
-                    serde_cbor::ser::IoWrite::new(writer),
-                ),
-            ),
+            Self::Cbor => crate::MagicalSerializer::new(serde_cbor::Serializer::new(
+                serde_cbor::ser::IoWrite::new(writer),
+            )),
 
             #[cfg(feature = "rmp")]
             Self::Rmp => wrap!(rmp_serde::Serializer::<W>),
 
             #[cfg(feature = "bincode")]
-            Self::Bincode => wrap!(
-                bincode::Serializer::<W, _>,
-                bincode::DefaultOptions::new()
-            ),
+            Self::Bincode => wrap!(bincode::Serializer::<W, _>, bincode::DefaultOptions::new()),
 
             #[cfg(feature = "pickle")]
             Self::Pickle => {
@@ -103,15 +95,11 @@ impl SerializationFormat {
                 let stop_opcode = b".";
                 let writer = crate::util::RcRfWriter::from(writer);
 
-                let m = crate::MagicalSerializer::new(
-                    serde_pickle::Serializer::new(
-                        writer.clone(),
-                        serde_pickle::SerOptions::default(),
-                    ),
-                );
-                let mut m = unsafe {
-                    m.with_seized_writer(writer.with_dyn_write())
-                };
+                let m = crate::MagicalSerializer::new(serde_pickle::Serializer::new(
+                    writer.clone(),
+                    serde_pickle::SerOptions::default(),
+                ));
+                let mut m = unsafe { m.with_seized_writer(writer.with_dyn_write()) };
 
                 m.set_prefix_for_writes(protocol_header);
                 m.set_sufix_for_writes(stop_opcode);
@@ -120,10 +108,7 @@ impl SerializationFormat {
         }
     }
 
-    pub fn deserializer<'r, R: Read + 'r>(
-        self,
-        reader: R,
-    ) -> crate::MagicalDeserializer<'r> {
+    pub fn deserializer<'r, R: Read + 'r>(self, reader: R) -> crate::MagicalDeserializer<'r> {
         DeserializationFormat::from(self).deserializer(reader)
     }
 }

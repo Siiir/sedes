@@ -21,16 +21,12 @@ pub trait SedeFormat {
 
     fn favoured_file_ext(&self) -> &'static str;
 
-    fn alt_file_exts(&self)
-    -> impl IntoIterator<Item = &'static str>;
+    fn alt_file_exts(&self) -> impl IntoIterator<Item = &'static str>;
 }
 
 impl<D> SedeFormat for D
 where
-    D: Clone
-        + Copy
-        + From<DeserializationFormat>
-        + for<'a> From<&'a DeserializationFormat>,
+    D: Clone + Copy + From<DeserializationFormat> + for<'a> From<&'a DeserializationFormat>,
     DeserializationFormat: From<D> + for<'a> From<&'a D>,
 {
     fn from_file_ext_os(file_extension: &OsStr) -> Option<Self> {
@@ -56,9 +52,7 @@ where
             .expect("every format should have a file extension")
     }
 
-    fn alt_file_exts(
-        &self,
-    ) -> impl IntoIterator<Item = &'static str> {
+    fn alt_file_exts(&self) -> impl IntoIterator<Item = &'static str> {
         DeserializationFormat::from(self)
             .get_str("alt_file_exts")
             .into_iter()
@@ -76,28 +70,24 @@ mod test {
 
         #[test]
         fn lists_yml_and_yaml_file_exts() {
-            let yaml_file_exts: HashSet<&str> =
-                DeserializationFormat::Yaml
-                    .file_exts()
-                    .into_iter()
-                    .collect();
+            let yaml_file_exts: HashSet<&str> = DeserializationFormat::Yaml
+                .file_exts()
+                .into_iter()
+                .collect();
 
-            let wanted_file_exts: HashSet<&str> =
-                ["yml", "yaml"].into();
+            let wanted_file_exts: HashSet<&str> = ["yml", "yaml"].into();
             assert!(yaml_file_exts.is_superset(&wanted_file_exts));
         }
 
         #[test]
         fn constructs_from_yml_file_ext() {
-            let sede_fmt =
-                DeserializationFormat::from_file_ext("yml");
+            let sede_fmt = DeserializationFormat::from_file_ext("yml");
             assert_eq!(sede_fmt, Some(DeserializationFormat::Yaml));
         }
 
         #[test]
         fn constructs_from_yaml_file_ext() {
-            let sede_fmt =
-                DeserializationFormat::from_file_ext("yaml");
+            let sede_fmt = DeserializationFormat::from_file_ext("yaml");
             assert_eq!(sede_fmt, Some(DeserializationFormat::Yaml));
         }
     }

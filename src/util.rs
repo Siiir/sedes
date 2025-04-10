@@ -36,9 +36,7 @@ pub mod rc_rf {
             Self(value)
         }
     }
-    impl<'w, W: Write + 'w> From<RcRfWriter<W>>
-        for RcRfWriter<dyn Write + 'w>
-    {
+    impl<'w, W: Write + 'w> From<RcRfWriter<W>> for RcRfWriter<dyn Write + 'w> {
         fn from(value: RcRfWriter<W>) -> Self {
             value.with_dyn_write()
         }
