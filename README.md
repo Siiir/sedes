@@ -2,13 +2,14 @@
 
 ## 🎯 Overview
 
-An open-source Rust library, which focuses around **se**rialization and **des**erialization
+An open-source Rust library, which focuses on doing **serialization** and **deserialization** **with {dynamic, deduced} serialization format**.
 
-Supported deserialization formats - `JSON`, `YAML`, `CBOR`, `RMP`, `Bincode`, `Pickle`
+Currently, supported deserialization formats - `JSON`, `YAML`, `CBOR`, `RMP`, `Bincode`, `Pickle`.  
+Currently, supported serialization formats - `JSON`, `Pretty JSON`, `YAML`, `CBOR`, `RMP`, `Bincode`, `Pickle`.  
 
-Supported serialization formats - `JSON`, `Pretty JSON`, `YAML`, `CBOR`, `RMP`, `Bincode`, `Pickle`
+## Example use case
 
-## Example usecase
+**Behold the deduction of (de)serialization format** from file extension.
 
 ### Deserialization
 
