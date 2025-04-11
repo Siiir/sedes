@@ -29,13 +29,13 @@ use crate::DeserializationFormat;
 #[derive(Default)]
 pub enum SerializationFormat {
     #[cfg(feature = "json")]
-    #[strum(serialize = "JSON-pretty")]
+    #[strum(serialize = "JSON-pretty", serialize = "JSON")]
     #[default]
     PrettyJson,
 
     #[cfg(feature = "json")]
-    #[strum(serialize = "JSON")]
-    Json,
+    #[strum(serialize = "JSON-compact")]
+    CompactJson,
 
     #[cfg(feature = "yaml")]
     #[strum(serialize = "YAML")]
@@ -73,7 +73,7 @@ impl SerializationFormat {
                 crate::MagicalSerializer::new(serde_json::Serializer::pretty(writer))
             }
             #[cfg(feature = "json")]
-            Self::Json => wrap!(serde_json::Serializer::<W>),
+            Self::CompactJson => wrap!(serde_json::Serializer::<W>),
 
             #[cfg(feature = "yaml")]
             Self::Yaml => wrap!(serde_yaml::Serializer::<W>),
