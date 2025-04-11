@@ -1,7 +1,4 @@
-use std::{
-    borrow::BorrowMut, cell::OnceCell, error::Error, io::Write,
-    ptr::NonNull,
-};
+use std::{borrow::BorrowMut, cell::OnceCell, error::Error, io::Write, ptr::NonNull};
 
 type SeizedWriterHandle<'w> = crate::util::RcRfDynWriter<'w>;
 
@@ -28,11 +25,9 @@ impl<'w> MagicalSerializer<'w> {
             writer: OnceCell::new(),
             boxed_dependency: Box::leak(Box::new(())),
             erased_dependant: unsafe {
-                NonNull::new_unchecked(Box::leak(Box::new(
-                    <dyn erased_serde::Serializer>::erase(
-                        typed_serializer,
-                    ),
-                )))
+                NonNull::new_unchecked(Box::leak(Box::new(<dyn erased_serde::Serializer>::erase(
+                    typed_serializer,
+                ))))
             },
         }
     }
@@ -41,19 +36,16 @@ impl<'w> MagicalSerializer<'w> {
         T: 'w,
         &'w mut T: serde::Serializer,
     {
-        let boxed_dependency: *mut T =
-            Box::leak(Box::new(typed_serializer));
+        let boxed_dependency: *mut T = Box::leak(Box::new(typed_serializer));
         Self {
             prefix_for_writes: b"",
             sufix_for_writes: b"",
             writer: OnceCell::new(),
             boxed_dependency,
             erased_dependant: unsafe {
-                NonNull::new_unchecked(Box::leak(Box::new(
-                    <dyn erased_serde::Serializer>::erase(
-                        &mut *boxed_dependency,
-                    ),
-                )))
+                NonNull::new_unchecked(Box::leak(Box::new(<dyn erased_serde::Serializer>::erase(
+                    &mut *boxed_dependency,
+                ))))
             },
         }
     }
@@ -106,14 +98,11 @@ impl<'w> MagicalSerializer<'w> {
         &mut self,
         serializable: &'o O,
     ) -> Result<(), impl Error + 'static> {
-        erased_serde::Serialize::erased_serialize(
-            serializable,
-            unsafe {
-                // We trust the called function to not take the value out of the field.
-                // We know this is the only accessor of all chained serializer's dependencies.
-                self.erased_dependant.as_mut()
-            },
-        )
+        erased_serde::Serialize::erased_serialize(serializable, unsafe {
+            // We trust the called function to not take the value out of the field.
+            // We know this is the only accessor of all chained serializer's dependencies.
+            self.erased_dependant.as_mut()
+        })
     }
 }
 impl<'w> MagicalSerializer<'w> {
@@ -123,10 +112,14 @@ impl<'w> MagicalSerializer<'w> {
         self,
         seized_writer: SeizedWriterHandle<'seized_w>,
     ) -> MagicalSerializer<'seized_w> {
-        let prolonged_self: MagicalSerializer<'seized_w> =
-            unsafe { std::mem::transmute(self) };
+        let prolonged_self: MagicalSerializer<'seized_w> = unsafe { std::mem::transmute(self) };
 
-        prolonged_self.writer.set(seized_writer).unwrap_or_else(|_| panic!("There must be only one real writer under the hood of serializer(s)."));
+        prolonged_self
+            .writer
+            .set(seized_writer)
+            .unwrap_or_else(|_| {
+                panic!("There must be only one real writer under the hood of serializer(s).")
+            });
 
         prolonged_self
     }
@@ -155,10 +148,8 @@ mod test {
     fn serializes_int_to_json() {
         let mut sink = Vec::new();
         {
-            let typed_serializer =
-                serde_json::Serializer::new(&mut sink);
-            let mut magical_serializer =
-                crate::MagicalSerializer::new(typed_serializer);
+            let typed_serializer = serde_json::Serializer::new(&mut sink);
+            let mut magical_serializer = crate::MagicalSerializer::new(typed_serializer);
             magical_serializer.serialize(&3).unwrap();
         }
         assert_eq!(core::str::from_utf8(&sink).unwrap(), "3")
@@ -168,10 +159,8 @@ mod test {
     fn serializes_int_to_yaml() {
         let mut sink = Vec::new();
         {
-            let typed_serializer =
-                serde_yaml::Serializer::new(&mut sink);
-            let mut magical_serializer =
-                crate::MagicalSerializer::new(typed_serializer);
+            let typed_serializer = serde_yaml::Serializer::new(&mut sink);
+            let mut magical_serializer = crate::MagicalSerializer::new(typed_serializer);
             magical_serializer.serialize(&2).unwrap();
         }
         assert_eq!(core::str::from_utf8(&sink).unwrap(), "2\n")
@@ -181,17 +170,14 @@ mod test {
     fn serializes_static_obj_to_json() {
         let mut sink = Vec::new();
         {
-            let typed_serializer =
-                serde_json::Serializer::new(&mut sink);
-            let mut magical_serializer =
-                crate::MagicalSerializer::new(typed_serializer);
+            let typed_serializer = serde_json::Serializer::new(&mut sink);
+            let mut magical_serializer = crate::MagicalSerializer::new(typed_serializer);
             magical_serializer
                 .serialize(&*SERIALIZABLE_STATIC_OBJ)
                 .unwrap();
         }
         let sink_content = core::str::from_utf8(&sink).unwrap();
-        let correct_answers =
-            [r#"{"zero":0,"k":42}"#, r#"{"k":42,"zero":0}"#];
+        let correct_answers = [r#"{"zero":0,"k":42}"#, r#"{"k":42,"zero":0}"#];
         assert!(correct_answers.contains(&sink_content));
     }
 
@@ -200,17 +186,14 @@ mod test {
     fn serializes_static_obj_to_yaml() {
         let mut sink = Vec::new();
         {
-            let typed_serializer =
-                serde_yaml::Serializer::new(&mut sink);
-            let mut magical_serializer =
-                crate::MagicalSerializer::new(typed_serializer);
+            let typed_serializer = serde_yaml::Serializer::new(&mut sink);
+            let mut magical_serializer = crate::MagicalSerializer::new(typed_serializer);
             magical_serializer
                 .serialize(&*SERIALIZABLE_STATIC_OBJ)
                 .unwrap();
         }
         let sink_content = core::str::from_utf8(&sink).unwrap();
-        let correct_answers =
-            ["zero: 0\nk: 42\n", "k: 42\nzero: 0\n"];
+        let correct_answers = ["zero: 0\nk: 42\n", "k: 42\nzero: 0\n"];
         assert!(correct_answers.contains(&sink_content));
     }
 }

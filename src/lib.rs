@@ -1,14 +1,12 @@
 use std::{io::Read, io::Write};
 pub use {
     de::{
-        deserialize_magically, fmt::DeserializationFormat,
+        deserialize_magically, fmt::DeserializationFormat, fs::deserialize_from_file,
         magical::MagicalDeserializer, make_deserializer,
-        fs::deserialize_from_file,
     },
     se::{
-        fmt::SerializationFormat, magical::MagicalSerializer,
+        fmt::SerializationFormat, fs::serialize_to_file, magical::MagicalSerializer,
         make_serializer, serialize_magically,
-        fs::serialize_to_file,
     },
 };
 
@@ -50,16 +48,13 @@ pub mod test {
     fn sede_bijectivity() -> color_eyre::Result<()> {
         for fmt in crate::DeserializationFormat::VARIANTS {
             for _ in 0..5 {
-                test_bijectivity_for(fmt)
-                    .with_context(|| format!("failed for {fmt}"))?;
+                test_bijectivity_for(fmt).with_context(|| format!("failed for {fmt}"))?;
             }
         }
         Ok(())
     }
 
-    fn test_bijectivity_for(
-        fmt: &crate::DeserializationFormat,
-    ) -> color_eyre::Result<()> {
+    fn test_bijectivity_for(fmt: &crate::DeserializationFormat) -> color_eyre::Result<()> {
         let mut rng = rand::rng();
         let mut sink = Vec::<u8>::new();
 
@@ -67,8 +62,7 @@ pub mod test {
 
         sink.clear();
         crate::serialize_magically(&mut sink, fmt, &serializable)?;
-        let deserialized: Serializable =
-            crate::deserialize_magically(sink.as_slice(), fmt)?;
+        let deserialized: Serializable = crate::deserialize_magically(sink.as_slice(), fmt)?;
         assert_eq!(deserialized, serializable);
 
         Ok(())

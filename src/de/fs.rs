@@ -1,10 +1,13 @@
-use std::path::Path;
-use std::ffi::OsStr;
+use crate::{DeserializationFormat, SedeFormat};
 use color_eyre::eyre::OptionExt as _;
+use color_eyre::{
+    Result,
+    eyre::{Context, eyre},
+};
 use fs_err::File;
 use serde::de::DeserializeOwned;
-use color_eyre::{eyre::{eyre, Context}, Result};
-use crate::{DeserializationFormat, SedeFormat};
+use std::ffi::OsStr;
+use std::path::Path;
 
 /// Deserializes an object from a file, deducing the (de)serialization format from the file extension.
 ///
@@ -27,21 +30,18 @@ use crate::{DeserializationFormat, SedeFormat};
 /// let deserialized: Vec<i32> = sedes::deserialize_from_file(&path).unwrap();
 /// assert_eq!(deserialized, vec![1, 2, 42]);
 /// ```
-pub fn deserialize_from_file<'de, O>(
-    path: impl AsRef<Path>,
-) -> Result<O>
+pub fn deserialize_from_file<'de, O>(path: impl AsRef<Path>) -> Result<O>
 where
     O: DeserializeOwned,
 {
     let path: &Path = path.as_ref();
 
-    let deser_fmt: DeserializationFormat = 
-    (|| -> Result<DeserializationFormat> {
-        let file_ext: &OsStr = path.extension()
-            .ok_or_eyre("File extension not found.")?;
+    let deser_fmt: DeserializationFormat = (|| -> Result<DeserializationFormat> {
+        let file_ext: &OsStr = path.extension().ok_or_eyre("File extension not found.")?;
         SedeFormat::from_file_ext_os(file_ext)
             .ok_or_else(|| eyre!("File extension not recognized: {file_ext:?}"))
-    })().context("Failed to deduce the deserialization format from the file extension.")?;
+    })()
+    .context("Failed to deduce the deserialization format from the file extension.")?;
 
     let file = File::open(path).context("Failed to open the file for reading.")?;
 

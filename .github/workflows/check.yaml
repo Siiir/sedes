@@ -1,0 +1,105 @@
+name: src checks
+
+on:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: write
+
+jobs:
+  cargo-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup rust toolchain
+        uses: dtolnay/rust-toolchain@1.85.1
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo git index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-
+
+      - name: Run all tests
+        run: |
+          cargo test --all-targets
+          cargo test --doc
+
+      - name: Check if docs build cleanly
+        run: cargo rustdoc -- -D warnings
+
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+
+      - name: Try to auto-format
+        run: cargo fmt --all
+
+      - name: Commit formatting fixes (but skip Cargo.toml)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git commit -am "style: auto-format with cargo fmt"
+            git push origin HEAD
+          fi
+
+      - name: Check formatting
+        run: cargo fmt --check --all
+
+  revert-if-failed:
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    needs: [cargo-ci]
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save original commit info
+        id: original_commit
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "msg=$(git log -1 --pretty=format:'%s')" >> "$GITHUB_OUTPUT"
+          echo "author=$(git log -1 --pretty=format:'%an <%ae>')" >> "$GITHUB_OUTPUT"
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Revert last commit and push
+        run: |
+          git reset --hard HEAD~1
+          git push origin HEAD --force
+
+      - name: Notify the pusher
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMIT_SHA="${{ steps.original_commit.outputs.sha }}"
+          COMMIT_MSG="${{ steps.original_commit.outputs.msg }}"
+          COMMIT_AUTHOR="${{ steps.original_commit.outputs.author }}"
+
+          gh api repos/${{ github.repository }}/commits/${COMMIT_SHA}/comments \
+            -f body="❌ CI checks failed.<br />**Commit**: $COMMIT_SHA<br />**Message**: \`$COMMIT_MSG\`<br />**Author**: $COMMIT_AUTHOR<br />This commit has been automatically reverted." \
+            -H "Accept: application/vnd.github.v3+json"

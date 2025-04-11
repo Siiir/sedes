@@ -12,17 +12,13 @@ mod dyn_serialize_static {
     }
     #[test]
     fn fails_with_non_existing_fmt() {
-        assert!(serialize_magically(std::io::sink(), "Json", &())
-            .is_err())
+        assert!(serialize_magically(std::io::sink(), "Json", &()).is_err())
     }
     #[cfg(feature = "json")]
     #[test]
     fn serializes_json() {
         let mut writer = Vec::<u8>::new();
         serialize_magically(&mut writer, "JSON", &42).unwrap();
-        assert_eq!(
-            core::str::from_utf8(writer.as_slice()).unwrap(),
-            "42"
-        )
+        assert_eq!(core::str::from_utf8(writer.as_slice()).unwrap(), "42")
     }
 }

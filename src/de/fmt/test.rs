@@ -10,19 +10,15 @@ mod pickle {
         let serializable: Serializable = Rng::random(&mut rng);
 
         // Static serialization
-        let static_pickle_bytes = serde_pickle::to_vec(
-            &serializable,
-            serde_pickle::SerOptions::new(),
-        )
-        .unwrap();
+        let static_pickle_bytes =
+            serde_pickle::to_vec(&serializable, serde_pickle::SerOptions::new()).unwrap();
         // Magic deserialization
 
-        let deserialized =
-            crate::deserialize_magically::<_, _, Serializable>(
-                static_pickle_bytes.as_slice(),
-                "Pickle",
-            )
-            .unwrap();
+        let deserialized = crate::deserialize_magically::<_, _, Serializable>(
+            static_pickle_bytes.as_slice(),
+            "Pickle",
+        )
+        .unwrap();
         assert_eq!(deserialized, serializable);
 
         Ok(())

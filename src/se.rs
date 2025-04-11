@@ -6,11 +6,7 @@ pub mod fmt;
 
 pub mod fs;
 
-pub fn make_serializer<
-    'w,
-    W: Write + 'w,
-    F: TryInto<crate::SerializationFormat>,
->(
+pub fn make_serializer<'w, W: Write + 'w, F: TryInto<crate::SerializationFormat>>(
     writer: W,
     format: F,
 ) -> Result<crate::MagicalSerializer<'w>, F::Error> {
@@ -50,8 +46,7 @@ where
     color_eyre::Report: From<F::Error>,
     O: serde::Serialize + ?Sized + 'o,
 {
-    let mut serializer: crate::MagicalSerializer<'w> =
-        make_serializer(writer, format)?;
+    let mut serializer: crate::MagicalSerializer<'w> = make_serializer(writer, format)?;
     serializer.serialize(serializable)?;
     Ok(())
 }

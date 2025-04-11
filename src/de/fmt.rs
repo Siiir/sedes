@@ -36,10 +36,7 @@ pub enum DeserializationFormat {
     Json,
 
     #[cfg(feature = "yaml")]
-    #[strum(
-        serialize = "YAML",
-        props(file_ext = "yml", alt_file_exts = "yaml")
-    )]
+    #[strum(serialize = "YAML", props(file_ext = "yml", alt_file_exts = "yaml"))]
     Yaml,
 
     #[cfg(feature = "cbor")]
@@ -60,57 +57,41 @@ pub enum DeserializationFormat {
 }
 
 impl DeserializationFormat {
-    pub fn serializer<'w, W: Write + 'w>(
-        self,
-        writer: W,
-    ) -> crate::MagicalSerializer<'w> {
+    pub fn serializer<'w, W: Write + 'w>(self, writer: W) -> crate::MagicalSerializer<'w> {
         SerializationFormat::from(self).serializer(writer)
     }
 
-    pub fn deserializer<'r, R: Read + 'r>(
-        self,
-        reader: R,
-    ) -> crate::MagicalDeserializer<'r> {
+    pub fn deserializer<'r, R: Read + 'r>(self, reader: R) -> crate::MagicalDeserializer<'r> {
         match self {
             #[cfg(feature = "json")]
-            Self::Json => crate::MagicalDeserializer::new(
-                serde_json::Deserializer::from_reader(reader),
-            ),
-
-            #[cfg(feature = "yaml")]
-            Self::Yaml => {
-                crate::MagicalDeserializer::from_direct_impl(
-                    serde_yaml::Deserializer::from_reader(reader),
-                )
+            Self::Json => {
+                crate::MagicalDeserializer::new(serde_json::Deserializer::from_reader(reader))
             }
 
-            #[cfg(feature = "cbor")]
-            Self::Cbor => crate::MagicalDeserializer::new(
-                serde_cbor::Deserializer::new(
-                    serde_cbor::de::IoRead::new(reader),
-                ),
+            #[cfg(feature = "yaml")]
+            Self::Yaml => crate::MagicalDeserializer::from_direct_impl(
+                serde_yaml::Deserializer::from_reader(reader),
             ),
+
+            #[cfg(feature = "cbor")]
+            Self::Cbor => crate::MagicalDeserializer::new(serde_cbor::Deserializer::new(
+                serde_cbor::de::IoRead::new(reader),
+            )),
 
             #[cfg(feature = "rmp")]
-            Self::Rmp => crate::MagicalDeserializer::new(
-                rmp_serde::Deserializer::new(reader),
-            ),
+            Self::Rmp => crate::MagicalDeserializer::new(rmp_serde::Deserializer::new(reader)),
 
             #[cfg(feature = "bincode")]
-            Self::Bincode => crate::MagicalDeserializer::new(
-                bincode::Deserializer::with_reader(
-                    reader,
-                    bincode::DefaultOptions::new(),
-                ),
-            ),
+            Self::Bincode => crate::MagicalDeserializer::new(bincode::Deserializer::with_reader(
+                reader,
+                bincode::DefaultOptions::new(),
+            )),
 
             #[cfg(feature = "pickle")]
-            Self::Pickle => crate::MagicalDeserializer::new(
-                serde_pickle::Deserializer::new(
-                    reader,
-                    serde_pickle::DeOptions::default(),
-                ),
-            ),
+            Self::Pickle => crate::MagicalDeserializer::new(serde_pickle::Deserializer::new(
+                reader,
+                serde_pickle::DeOptions::default(),
+            )),
         }
     }
 }

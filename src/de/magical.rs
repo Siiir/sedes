@@ -5,9 +5,7 @@ pub struct MagicalDeserializer<'r> {
     /// which uniquely borrows the addressed value.
     boxed_dependency: *mut (dyn crate::util::Something + 'r),
     /// Should be dropped first. Should not be taken out of the field.
-    erased_dependant: ManuallyDrop<
-        Pin<Box<dyn erased_serde::Deserializer<'r> + 'r>>,
-    >,
+    erased_dependant: ManuallyDrop<Pin<Box<dyn erased_serde::Deserializer<'r> + 'r>>>,
 }
 
 impl<'r> MagicalDeserializer<'r> {
@@ -17,11 +15,9 @@ impl<'r> MagicalDeserializer<'r> {
     {
         Self {
             boxed_dependency: Box::leak(Box::new(())),
-            erased_dependant: ManuallyDrop::new(Box::pin(
-                <dyn erased_serde::Deserializer>::erase(
-                    typed_deserializer,
-                ),
-            )),
+            erased_dependant: ManuallyDrop::new(Box::pin(<dyn erased_serde::Deserializer>::erase(
+                typed_deserializer,
+            ))),
         }
     }
 
@@ -30,15 +26,12 @@ impl<'r> MagicalDeserializer<'r> {
         T: 'r,
         &'r mut T: serde::Deserializer<'r>,
     {
-        let boxed_dependency: *mut T =
-            Box::leak(Box::new(typed_deserializer));
+        let boxed_dependency: *mut T = Box::leak(Box::new(typed_deserializer));
         Self {
             boxed_dependency,
-            erased_dependant: ManuallyDrop::new(Box::pin(
-                <dyn erased_serde::Deserializer>::erase(unsafe {
-                    &mut *boxed_dependency
-                }),
-            )),
+            erased_dependant: ManuallyDrop::new(Box::pin(<dyn erased_serde::Deserializer>::erase(
+                unsafe { &mut *boxed_dependency },
+            ))),
         }
     }
 
@@ -74,12 +67,8 @@ mod test {
     fn deserializes_int_from_json() {
         let json_data = b"3";
         let mut source = &json_data[..];
-        let typed_deserializer =
-            serde_json::Deserializer::from_reader(&mut source);
-        let mut magical_deserializer =
-            crate::MagicalDeserializer::new(
-                typed_deserializer,
-            );
+        let typed_deserializer = serde_json::Deserializer::from_reader(&mut source);
+        let mut magical_deserializer = crate::MagicalDeserializer::new(typed_deserializer);
         let result: i32 = magical_deserializer.deserialize().unwrap();
         assert_eq!(result, 3);
     }
@@ -89,12 +78,9 @@ mod test {
     fn deserializes_int_from_yaml() {
         let yaml_data = b"2\n";
         let mut source = &yaml_data[..];
-        let typed_deserializer =
-            serde_yaml::Deserializer::from_reader(&mut source);
+        let typed_deserializer = serde_yaml::Deserializer::from_reader(&mut source);
         let mut magical_deserializer =
-            crate::MagicalDeserializer::from_direct_impl(
-                typed_deserializer,
-            );
+            crate::MagicalDeserializer::from_direct_impl(typed_deserializer);
         let result: i32 = magical_deserializer.deserialize().unwrap();
         assert_eq!(result, 2);
     }
@@ -103,16 +89,10 @@ mod test {
     #[test]
     fn deserializes_static_obj_from_json() {
         let mut source = JSON_OBJ.as_bytes();
-        let typed_deserializer =
-            serde_json::Deserializer::from_reader(&mut source);
-        let mut magical_deserializer =
-            crate::MagicalDeserializer::new(
-                typed_deserializer,
-            );
-        let result: serde_json::Value =
-            magical_deserializer.deserialize().unwrap();
-        let expected: serde_json::Value =
-            serde_json::from_str(&JSON_OBJ).unwrap();
+        let typed_deserializer = serde_json::Deserializer::from_reader(&mut source);
+        let mut magical_deserializer = crate::MagicalDeserializer::new(typed_deserializer);
+        let result: serde_json::Value = magical_deserializer.deserialize().unwrap();
+        let expected: serde_json::Value = serde_json::from_str(&JSON_OBJ).unwrap();
         assert_eq!(result, expected);
     }
 }
