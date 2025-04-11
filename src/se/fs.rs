@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, path::Path};
 
-use color_eyre::eyre::{Context as _, OptionExt, eyre};
+use color_eyre::eyre::{Context, OptionExt, eyre};
 
 use crate::{SedeFormat as _, SerializationFormat};
 
@@ -35,18 +35,22 @@ where
 {
     // Arg. adjustment
     let path: &Path = path.as_ref();
-    let write_mode: write_mode::WriteMode = write_mode.try_into()?;
+    (|| {
+        // Arg. adjustment
+        let write_mode: write_mode::WriteMode = write_mode.try_into()?;
 
-    // Deduction of the serialization format.
-    let ser_fmt: SerializationFormat = (|| -> color_eyre::Result<SerializationFormat> {
-        let file_ext: &OsStr = path.extension().ok_or_eyre("File extension not found.")?;
-        SerializationFormat::from_file_ext_os(file_ext)
-            .ok_or_else(|| eyre!("File extension not recognized: {file_ext:?}"))
+        // Deduction of the serialization format.
+        let ser_fmt: SerializationFormat = (|| -> color_eyre::Result<SerializationFormat> {
+            let file_ext: &OsStr = path.extension().ok_or_eyre("File extension not found.")?;
+            SerializationFormat::from_file_ext_os(file_ext)
+                .ok_or_else(|| eyre!("File extension not recognized: {file_ext:?}"))
+        })()
+        .context("Failed to deduce the serialization format from the file extension.")?;
+
+        // First IO op. – opening the file
+        let file = write_mode.std_open(path)?;
+        // Last IO ops – reading and closing
+        crate::serialize_magically::<_, SerializationFormat, O>(file, ser_fmt, serializable)
     })()
-    .context("Failed to deduce the serialization format from the file extension.")?;
-
-    // First IO op. – opening the file
-    let file = write_mode.fe_open(path)?;
-    // Last IO ops – reading and closing
-    crate::serialize_magically::<_, SerializationFormat, O>(file, ser_fmt, serializable)
+    .wrap_err_with(|| format!("failed to serialize an object to a file {path:?}"))
 }
