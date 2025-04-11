@@ -1,4 +1,18 @@
-# Sedes
+# sedes &emsp; [![Latest Version]][crates.io] [![License]][license] [![Documentation]][docs.rs] [![CI]][actions] [![Dependencies]][deps]
+<!-- [![Coverage]][codecov] -->
+
+[Latest Version]: https://img.shields.io/crates/v/sedes.svg
+[crates.io]: https://crates.io/crates/sedes
+[License]: https://img.shields.io/crates/l/sedes.svg
+[license]: https://github.com/Siiir/sedes/blob/main/LICENSE
+[Documentation]: https://docs.rs/sedes/badge.svg
+[docs.rs]: https://docs.rs/sedes
+[CI]: https://github.com/Siiir/sedes/actions/workflows/check.yaml/badge.svg?branch=main
+[actions]: https://github.com/Siiir/sedes/actions/workflows/check.yaml
+[Dependencies]: https://deps.rs/repo/github/Siiir/sedes/status.svg
+[deps]: https://deps.rs/repo/github/Siiir/sedes
+[Coverage]: https://codecov.io/gh/Siiir/sedes/branch/main/graph/badge.svg
+[codecov]: https://codecov.io/gh/Siiir/sedes
 
 ## 🎯 Overview
 
