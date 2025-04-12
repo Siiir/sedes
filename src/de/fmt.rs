@@ -109,7 +109,7 @@ impl From<&SerializationFormat> for DeserializationFormat {
         use SerializationFormat as SF;
         match value {
             SF::PrettyJson => Self::Json,
-            SF::Json => Self::Json,
+            SF::CompactJson => Self::Json,
             SF::Yaml => Self::Yaml,
             SF::Cbor => Self::Cbor,
             SF::Rmp => Self::Rmp,
